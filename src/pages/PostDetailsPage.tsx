@@ -16,6 +16,7 @@ import { CommentParams } from '@/services/types';
 import { ArrowLeft, CircleOff, Pencil, Trash } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Loader from '@/components/Loader';
+import PaginationControls from '../components/Pagination';
 
 const PostDetailsPage = () => {
   const { id } = useParams();
@@ -30,14 +31,19 @@ const PostDetailsPage = () => {
   );
 
   const { data, isLoading: isPostByIdLoading } = useGetPostQuery(id ?? '');
-  const { data: commentsData } = useGetCommentsQuery({
-    postId: id ?? '',
-    page: currentPage,
-    size: pageSize,
-  });
+  const { data: commentsData, isLoading: isPostCommentsLoading } =
+    useGetCommentsQuery({
+      postId: id ?? '',
+      page: currentPage,
+      size: pageSize,
+    });
 
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
   const singlePost = data ?? selectedPost;
   const comments = commentsData?.comments ?? commentsSliceData;
+
   const [addComment] = useAddCommentMutation();
   const [deleteComment] = useDeleteCommentMutation();
   const [deletePost] = useDeletePostMutation();
@@ -182,50 +188,39 @@ const PostDetailsPage = () => {
               </div>
             </div>
           ) : (
-            comments
-              ?.slice(currentPage * pageSize, (currentPage + 1) * pageSize)
-              .map((comment) => (
-                <div
-                  className="flex justify-between items-start"
-                  key={comment.id}
-                >
-                  <div>
-                    <div className="font-medium">{comment.userName}</div>
-                    <div className="text-sm text-gray-500">
-                      {comment.createdAt
-                        ? format(new Date(comment.createdAt), 'MMM d, yyyy')
-                        : ''}
-                    </div>
-                    <div className="mt-2">{comment.content}</div>
+            comments.map((comment) => (
+              <div
+                className="flex justify-between items-start"
+                key={comment.id}
+              >
+                <div>
+                  <div className="font-medium">{comment.userName}</div>
+                  <div className="text-sm text-gray-500">
+                    {comment.createdAt
+                      ? format(new Date(comment.createdAt), 'MMM d, yyyy')
+                      : ''}
                   </div>
-
-                  {currentUser?.userName === comment.userName && (
-                    <button onClick={() => handleDeleteComment(comment.id)}>
-                      <Trash className="text-red-500" size={15} />
-                    </button>
-                  )}
+                  <div className="mt-2">{comment.content}</div>
                 </div>
-              ))
+
+                {currentUser?.userName === comment.userName && (
+                  <button onClick={() => handleDeleteComment(comment.id)}>
+                    <Trash className="text-red-500" size={15} />
+                  </button>
+                )}
+              </div>
+            ))
           )}
         </div>
 
         {/* Pagination section */}
         <div className="flex justify-center space-x-2 mt-6">
-          {Array.from(
-            { length: Math.ceil(comments?.length / pageSize) },
-            (_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentPage(i)}
-                className={`px-3 py-1 rounded ${
-                  commentsData?.pageInfo?.pageNumber === i
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {i + 1}
-              </button>
-            )
+          {!isPostCommentsLoading && commentsData?.pageInfo && (
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={commentsData?.pageInfo.totalPages}
+              onPageChange={handlePageChange}
+            />
           )}
         </div>
       </div>

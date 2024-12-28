@@ -11,6 +11,7 @@ import { CircleOff, Trash } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Loader from '@/components/Loader';
 import { useState } from 'react';
+import PaginationControls from '@/components/Pagination';
 
 export default function PostPage() {
   const navigate = useNavigate();
@@ -117,19 +118,13 @@ export default function PostPage() {
 
           {/* Pagination */}
           <div className="flex justify-center space-x-2 mt-8">
-            {Array.from({ length: data?.pageInfo?.totalPages ?? 1 }, (_, i) => (
-              <button
-                key={i}
-                onClick={() => handlePageChange(i)}
-                className={`px-3 py-1 rounded ${
-                  data?.pageInfo?.pageNumber === i
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
+            {!isLoading && data?.pageInfo && (
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={data?.pageInfo.totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
           </div>
         </div>
       )}
